@@ -25,3 +25,7 @@ install: hcsr04-00A0.dtbo hcsr04.bin hcsr04
 	cp hcsr04-00A0.dtbo /lib/firmware
 	echo hcsr04 > /sys/devices/bone_capemgr.9/slots
 	cat /sys/devices/bone_capemgr.9/slots
+	dtc -O dtb -o hcsr04-00A0.dtbo -b 0 -@ hcsr04.dts
+	pasm -b hcsr04.p
+
+

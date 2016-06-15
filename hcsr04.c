@@ -18,10 +18,6 @@ int main(void) {
 		return 1;
 	}
 	
-//	if (prussdrv_open (PRU_EVTOUT_1)) {
-//		fprintf(stderr, ">> PRU open failed\n");
-//		return 1;
-//	}
 
 	/* Get the interrupt initialized */
 	prussdrv_pruintc_init(&pruss_intc_initdata);
