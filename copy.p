@@ -70,3 +70,20 @@ RESET_DELAY2:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ "GPIO44", "GPIO45","GPIO46","GPIO47","GPIO62","GPIO63","GPIO23","GPIO26";
+

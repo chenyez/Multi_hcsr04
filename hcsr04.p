@@ -4,7 +4,7 @@
 
 // Address of the io controller for GPIO1
 #define GPIO1 0x4804C000
-
+#define GPIO0 0x44E07000
 // Offset address for the output enable register of the gpio controller
 #define GPIO_OE 0x134
 
@@ -24,6 +24,16 @@
 
 #define BIT_TRIGGER2 0x0E
 #define BIT_ECHO2 0x0F
+
+#define BIT_TRIGGER3 0x1A
+#define BIT_ECHO3 0x17
+
+#define BIT_TRIGGER4 0x2
+#define BIT_ECHO4 0x3
+
+#define BIT_TRIGGER5 0xF
+#define BIT_ECHO5 0xE
+
 
 #define delay r0
 #define roundtrip r4
@@ -181,6 +191,221 @@ RESET_DELAY2:
 	SUB delay, delay, 1
 	QBNE RESET_DELAY2, delay, 0
 
+
+
+/* Third Sensor begin */
+
+	MOV r3, GPIO0 | GPIO_OE
+	LBBO r2, r3, 0, 4
+	CLR r2, BIT_TRIGGER3
+	SET r2, BIT_ECHO3
+
+
+	SBBO r2, r3, 0, 4
+
+TRIGGER3:
+
+	// Fire the sonar
+	// Set trigger pin to high
+	MOV r2, 1<<BIT_TRIGGER3
+	MOV r3, GPIO0 | GPIO_SETDATAOUT
+	SBBO r2, r3, 0, 4
+
+	// Delay 10 microseconds (200 MHz / 2 instructions = 10 ns per loop, 10 us = 1000 loops) 
+	MOV delay, 1000
+TRIGGER_DELAY3:
+	SUB delay, delay, 1
+	QBNE TRIGGER_DELAY3, delay, 0
+	
+	// Set trigger pin to low
+	MOV r2, 1<<BIT_TRIGGER3
+	MOV r3, GPIO0 | GPIO_CLEARDATAOUT
+	SBBO r2, r3, 0, 4
+	
+	// Wait for BIT_ECHO to go high, i.e. wait for the echo cycle to start
+	MOV r3, GPIO0 | GPIO_DATAIN
+WAIT_ECHO3:
+	// Read the GPIO until BIT_ECHO goes high
+	LBBO r2, r3, 0, 4
+
+	QBBC WAIT_ECHO3, r2, BIT_ECHO3
+
+	// roundtrip measures the echo duration in microseconds, resolution is 1us
+
+	MOV roundtrip, 0
+
+SAMPLE_ECHO3:
+
+	// Delay 1 microsecond (adjusted because it takes time to query the GPIO pin)
+	MOV delay, 76
+SAMPLE_ECHO_DELAY3:
+	SUB delay, delay, 1
+	QBNE SAMPLE_ECHO_DELAY3, delay, 0
+	
+	// Add 1us to the roundtrip counter
+	ADD roundtrip, roundtrip, 1
+	
+	// Read GPIO until BIT_ECHO goes low
+	LBBO r2, r3, 0, 4
+	QBBS SAMPLE_ECHO3, r2, BIT_ECHO3
+
+
+// Third Sensor End
+	SBCO roundtrip, c24, 8, 4
+	// Trigger the PRU0 interrupt (C program gets the event)
+	MOV r31.b0, PRU0_ARM_INTERRUPT+16
+
+	// Delay to allow sonar to stop resonating and sound burst to decay in environment
+	MOV delay, 3000000
+
+RESET_DELAY3:
+	SUB delay, delay, 1
+	QBNE RESET_DELAY3, delay, 0
+
+
+
+
+
+/* Forth Sensor begin */
+
+	MOV r3, GPIO0 | GPIO_OE
+	LBBO r2, r3, 0, 4
+	CLR r2, BIT_TRIGGER4
+	SET r2, BIT_ECHO4
+
+
+	SBBO r2, r3, 0, 4
+
+TRIGGER4:
+
+	// Fire the sonar
+	// Set trigger pin to high
+	MOV r2, 1<<BIT_TRIGGER4
+	MOV r3, GPIO0 | GPIO_SETDATAOUT
+	SBBO r2, r3, 0, 4
+
+	// Delay 10 microseconds (200 MHz / 2 instructions = 10 ns per loop, 10 us = 1000 loops) 
+	MOV delay, 1000
+TRIGGER_DELAY4:
+	SUB delay, delay, 1
+	QBNE TRIGGER_DELAY4, delay, 0
+	
+	// Set trigger pin to low
+	MOV r2, 1<<BIT_TRIGGER4
+	MOV r3, GPIO0 | GPIO_CLEARDATAOUT
+	SBBO r2, r3, 0, 4
+	
+	// Wait for BIT_ECHO to go high, i.e. wait for the echo cycle to start
+	MOV r3, GPIO0 | GPIO_DATAIN
+WAIT_ECHO4:
+	// Read the GPIO until BIT_ECHO goes high
+	LBBO r2, r3, 0, 4
+
+	QBBC WAIT_ECHO4, r2, BIT_ECHO4
+
+	// roundtrip measures the echo duration in microseconds, resolution is 1us
+
+	MOV roundtrip, 0
+
+SAMPLE_ECHO4:
+
+	// Delay 1 microsecond (adjusted because it takes time to query the GPIO pin)
+	MOV delay, 76
+SAMPLE_ECHO_DELAY4:
+	SUB delay, delay, 1
+	QBNE SAMPLE_ECHO_DELAY4, delay, 0
+	
+	// Add 1us to the roundtrip counter
+	ADD roundtrip, roundtrip, 1
+	
+	// Read GPIO until BIT_ECHO goes low
+	LBBO r2, r3, 0, 4
+	QBBS SAMPLE_ECHO4, r2, BIT_ECHO4
+
+
+// Forth Sensor End
+	SBCO roundtrip, c24, 12, 4
+	// Trigger the PRU0 interrupt (C program gets the event)
+	MOV r31.b0, PRU0_ARM_INTERRUPT+16
+
+	// Delay to allow sonar to stop resonating and sound burst to decay in environment
+	MOV delay, 3000000
+
+RESET_DELAY4:
+	SUB delay, delay, 1
+	QBNE RESET_DELAY4, delay, 0
+
+
+
+
+/* Fifth Sensor begin */
+
+	MOV r3, GPIO0 | GPIO_OE
+	LBBO r2, r3, 0, 4
+	CLR r2, BIT_TRIGGER5
+	SET r2, BIT_ECHO5
+
+
+	SBBO r2, r3, 0, 4
+
+TRIGGER5:
+
+	// Fire the sonar
+	// Set trigger pin to high
+	MOV r2, 1<<BIT_TRIGGER5
+	MOV r3, GPIO0 | GPIO_SETDATAOUT
+	SBBO r2, r3, 0, 4
+
+	// Delay 10 microseconds (200 MHz / 2 instructions = 10 ns per loop, 10 us = 1000 loops) 
+	MOV delay, 1000
+TRIGGER_DELAY5:
+	SUB delay, delay, 1
+	QBNE TRIGGER_DELAY5, delay, 0
+	
+	// Set trigger pin to low
+	MOV r2, 1<<BIT_TRIGGER5
+	MOV r3, GPIO0 | GPIO_CLEARDATAOUT
+	SBBO r2, r3, 0, 4
+	
+	// Wait for BIT_ECHO to go high, i.e. wait for the echo cycle to start
+	MOV r3, GPIO0 | GPIO_DATAIN
+WAIT_ECHO5:
+	// Read the GPIO until BIT_ECHO goes high
+	LBBO r2, r3, 0, 4
+
+	QBBC WAIT_ECHO5, r2, BIT_ECHO5
+
+	// roundtrip measures the echo duration in microseconds, resolution is 1us
+
+	MOV roundtrip, 0
+
+SAMPLE_ECHO5:
+
+	// Delay 1 microsecond (adjusted because it takes time to query the GPIO pin)
+	MOV delay, 76
+SAMPLE_ECHO_DELAY5:
+	SUB delay, delay, 1
+	QBNE SAMPLE_ECHO_DELAY5, delay, 0
+	
+	// Add 1us to the roundtrip counter
+	ADD roundtrip, roundtrip, 1
+	
+	// Read GPIO until BIT_ECHO goes low
+	LBBO r2, r3, 0, 4
+	QBBS SAMPLE_ECHO5, r2, BIT_ECHO5
+
+
+// Fifth Sensor End
+	SBCO roundtrip, c24, 16, 4
+	// Trigger the PRU0 interrupt (C program gets the event)
+	MOV r31.b0, PRU0_ARM_INTERRUPT+16
+
+	// Delay to allow sonar to stop resonating and sound burst to decay in environment
+	MOV delay, 3000000
+
+RESET_DELAY5:
+	SUB delay, delay, 1
+	QBNE RESET_DELAY5, delay, 0
 
 
 
