@@ -24,8 +24,11 @@ int main(void) {
 
 	/* Get pointers to PRU local memory */
 	void *pruDataMem;
-	prussdrv_map_prumem(PRUSS0_PRU0_DATARAM, &pruDataMem);
+	//PRUSS0_PRU0_DATARAM,
+	prussdrv_map_prumem(0, &pruDataMem);
 	unsigned int *pruData = (unsigned int *) pruDataMem;
+
+	printf("pruData=%s\n:",pruDataMem);
 
 	/* Execute code on PRU */
 	printf(">> Executing HCSR-04 code\n");
